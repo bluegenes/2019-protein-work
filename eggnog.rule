@@ -1,0 +1,32 @@
+rule get_eggnog_dbs:
+    output:
+        data_dir = directory("eggnog_data")
+    conda: "eggnog.yml"
+    shell:
+        """
+        download_eggnog_data.py -y -f -s --data_dir {output.data_dir}
+        """
+rule run_eggnog_mapper:
+    input: 
+        fasta="test/p53.fa"
+        data_dir=directory("eggnog_data")
+    output: "p53_maNOG"
+    params:
+        mode="diamond"
+    conda: "eggnog.yml"
+    #script: "eggnog.wrapper.py"
+    shell:
+        """
+        python emapper.py -i {input.fasta} --output {output} -m {params.mode} --data_dir {input.data_dir} --cpu {threads}
+        """
+#rule split_fasta_into_chunks:
+#    input: "input_file.faa""
+#    output:
+#    params:
+#        num_lines_per_chunk=2000000 
+#    conda: "eggnog.yml"
+#    shell:
+#        """
+#        split -l {params.num_lines_per_chunk} -a 3 -d {input} input_file.chunk_
+#        """
+#
