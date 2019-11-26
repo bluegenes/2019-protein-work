@@ -8,6 +8,8 @@ import re
 import pandas as pd
 from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 HTTP = HTTPRemoteProvider()
+from snakemake.remote.FTP import RemoteProvider as FTPRemoteProvider
+FTP = FTPRemoteProvider()
 
 def build_genbank_urls(row, base_url, outdir):
     sample_name = row[2].split('/')[-1]
@@ -33,7 +35,7 @@ def build_genbank_urls(row, base_url, outdir):
 csv_list = ["../2018-test_datasets/gingivalis.csv", "../2018-test_datasets/bacteroides.csv", "../2018-test_datasets/denticola.csv"]
 
 genbank_url = 'https://ftp.ncbi.nih.gov/genomes/all'
-genome, protein, rna, cds = True, True, True, True
+genome, protein, rna, cds = True, False, False, False #, True, True, True
 genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
 genomic_ext = "_genomic.fna.gz"
 protein_ext = "_protein.faa.gz"
@@ -84,26 +86,31 @@ rule all:
 
 # download rna, protein, genomic sequences
 rule get_genomic_datasets:
-    input: lambda wildcards: HTTP.remote(glinkdb[wildcards.sample])
+    #input: lambda wildcards: HTTP.remote(glinkdb[wildcards.sample])
+    input: lambda wildcards: FTP.remote(glinkdb[wildcards.sample], static=True, keep_local=True, immediate_close=True)
     #output: f"{outbase}/{{csv_name}}/{genomic_dir}/{{sample}}_genomic.fna.gz"
     output: os.path.join(outbase, "{csv_name}", genomic_dir, "{sample}" + genomic_ext)
     conda: "dl-test-datasets.yml"
     shell: "mv {input} {output} 2> {log}"
 
+
 rule get_protein_datasets:
-    input: lambda wildcards: HTTP.remote(plinkdb[wildcards.sample])
+    #input: lambda wildcards: HTTP.remote(plinkdb[wildcards.sample])
+    input: lambda wildcards: FTP.remote(plinkdb[wildcards.sample], static=True, keep_local=True, immediate_close=True)
     output: os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext)
     conda: "dl-test-datasets.yml"
     shell: "mv {input} {output} 2> {log}"
 
 rule get_rna_datasets:
-    input: lambda wildcards: HTTP.remote(rlinkdb[wildcards.sample])
+    #input: lambda wildcards: HTTP.remote(rlinkdb[wildcards.sample])
+    input: lambda wildcards: FTP.remote(rlinkdb[wildcards.sample], static=True, keep_local=True, immediate_close=True)
     output: os.path.join(out_dir, "{csv_name}", rna_dir, "{sample}" + rna_ext)
     conda: "dl-test-datasets.yml"
     shell: "mv {input} {output} 2> {log}"
 
 rule get_cds_datasets:
-    input: lambda wildcards: HTTP.remote(clinkdb[wildcards.sample])
+    #input: lambda wildcards: HTTP.remote(clinkdb[wildcards.sample])
+    input: lambda wildcards: FTP.remote(clinkdb[wildcards.sample], static=True, keep_local=True, immediate_close=True)
     output: os.path.join(out_dir, "{csv_name}", rna_dir, "{sample}" + cds_ext)
     conda: "dl-test-datasets.yml"
     shell: "mv {input} {output} 2> {log}"
