@@ -5,123 +5,187 @@ Run: snakemake -s  biobombe_initial_ksweep.snakefile --use-conda -n
 
 import os
 import re
-import pandas as pd
-from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
-HTTP = HTTPRemoteProvider()
-from snakemake.remote.FTP import RemoteProvider as FTPRemoteProvider
-FTP = FTPRemoteProvider()
 
-# testing with some hardcoded vals
+# set some useful vars 
+genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
+outbase = "smash_testing"
+compare_dir = "compare"
+
 genomic_ext = "_genomic.fna.gz"
 protein_ext = "_protein.faa.gz"
 rna_ext = "_rna_from_genomic.fna.gz"
 cds_ext = "_cds_from_genomic.fna.gz"
-
-outbase = "smash_testing"
     
+
+# Infer sample IDs from previously downloaded files (dl-datasets.snakefile), rather than getting them from the csvs
+#GENOMIC = glob_wildcards(os.path.join(outbase, "*", genomic_dir, "{sample}.fna.gz" )
+#PROTEIN = glob_wildcards(os.path.join(outbase, "*", protein_dir, "{sample}.faa.gz")
+#RNA = glob_wildcards(os.path.join(outbase, "*", rna_dir, "{sample}.fna.gz")
+#CDS = glob_wildcards(os.path.join(outbase, "*", cds_dir, "{sample}.fna.gz")
+
+compare_extensions= [".np", ".csv"]
+
+SUBSETS=["bacteroides", "denticola", "gingivalis"]
+prot_moltypes=["protein", "rna", "cds"]
+prot_encodings=["protein", "dayhoff", "hp"]
+prot_ksizes = ["7", "11", "17"]
+
+nucl_moltypes=["genomic", "rna", "cds"]
+nucl_encodings=["nucl"]
+nucl_ksizes = ["21", "31", "51"]
+
+translate_moltypes=["rna", "cds"]
+translate_ksizes = ["21", "33", "51"] # need to be divisible by 3
+
+prot_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
+nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
+translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
+
 rule all:
-    input: sig_files
-
-sig_files = []
-
-csv_list = ["../2018-test_datasets/gingivalis.csv", "../2018-test_datasets/bacteroides.csv", "../2018-test_datasets/denticola.csv"]
-### TBD: # build sig outputs
-#genome_exts = [".sig"]
-#ksizes = ["21", "31", "51"]
-
-#genome_sigs = [x.split('.fna.gz')[0] + ".sig" for x in genome_files]
-#protein_sigs = [x.split('.faa.gz')[0] + ".sig" for x in genome_files]
-
-#rna_sigs = [x.split('.fna.gz')[0] + ".sig" for x in genome_files]
-#cds_sigs = [x.split('.fna.gz')[0] + ".sig" for x in genome_files]
+    input: prot_compare_files, nucl_compare_files, translate_compare_files
+    #expand(os.path.join(outbase, compare_dir, "{subset}_k{k}_genomic_compare.csv"), subset=SUBSETS, k=nucl_ksizes)
 
 # compute nucleotide sigs
 rule compute_genomic:
-    input: os.path.join(outbase, "{csv_name}", genomic_dir, "{sample}" + genomic_ext)
-    output: os.path.join(outbase, "{csv_name}", genomic_dir, "sigs", "{sample}_k{k}_scaled{scaled}_genomic.sig" )
+    input: os.path.join(outbase, "{subset}", genomic_dir, "{sample}" + genomic_ext)
+    output: os.path.join(outbase, "{subset}", genomic_dir, "sigs", "{sample}_k{k}_scaled{scaled}.sig" )
     params:
         scaled=2000,
-        k=[21,31,51],
+        k=nucl_ksizes,
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 # compute rna sigs
 rule compute_rna:
-    input: os.path.join(outbase, "{csv_name}", rna_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{csv_name}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}_rna_from_genomic.sig" )
+    input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
+    output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}.sig" )
     params:
         scaled=2000,
-        k=[21,31,51],
+        k=nucl_ksizes,
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 rule compute_cds:
-    input: os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{csv_name}", cds_dir, "sigs", "{sample}_k{k}_scaled{scaled}_cds_from_genomic.sig" )
+    input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + rna_ext)
+    output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled{scaled}.sig" )
     params:
         scaled=2000,
-        k=[21,31,51],
-        extra=" --protein "
+        k=nucl_ksizes,
+        extra=" --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 # 6 frame translation --> signatures
 ### why are we using rna_from_genomic over cds .. check, bc cds = only coding = cleaner!?
 rule compute_translated_rna:
-    input: os.path.join(outbase, "{csv_name}", rna_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{csv_name}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}_rna_from_genomic_translated.sig" )
+    input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
+    output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}_translated.sig" )
     params:
         scaled=2000,
-        k=[21,33,51],
-        extra=" --protein "
+        k=translate_ksizes,
+        extra=" --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 rule compute_translated_cds:
-    input: os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{csv_name}", cds_dir, "sigs", "{sample}_k{k}_scaled{scaled}_cds_from_genomic_translated.sig" )
+    input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + rna_ext)
+    output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled{scaled}_translated.sig" )
     params:
         scaled=2000,
-        k=[21,33,51],
-        extra=" --protein "
+        k=translate_ksizes,
+        extra=" --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 # compute protein sigs
 rule compute_prot:
-    input: os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext)
-    output: os.path.join(outbase, "{csv_name}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_protein.sig" )
+    input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
+    output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_protein.sig" )
     params:
         scaled=2000,
-        k=[7,11,17],
-        extra=" --input-is-protein --protein "
+        k=prot_ksizes,
+        extra=" --input-is-protein --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 
 # compute dayhoff sigs
 rule compute_dayhoff:
-    input: os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext)
-    output: os.path.join(outbase, "{csv_name}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_dayhoff.sig" )
+    input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
+    output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_dayhoff.sig" )
     params:
         scaled=2000,
-        k=[7_11_17],
-        extra=" --input-is-protein --dayhoff "
+        k=prot_ksizes,
+        extra=" --input-is-protein --dayhoff ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 # compute hp sigs
 rule compute_hp:
-    input: os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext)
-    output: os.path.join(outbase, "{csv_name}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_hp.sig" )
+    input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
+    output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_hp.sig" )
     params:
         scaled=2000,
-        k=[7,11,17],
-        extra=" --input-is-protein --hp "
+        k=prot_ksizes,
+        extra=" --input-is-protein --hp ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
-# build all compare matrices: csv output
+
+#def aggregate_nucl_sigs(w):
+#    samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.fna.gz"))
+#    sigfiles = expand(os.path.join(outbase, w.subset, "{w.molecule}_dir", "sigs", "{sample}_k{w.k}_scaled{scaled}.sig"), sample=samples)
+#    return sigfiles
+
+#rule compare_nucl:
+#    input: aggregate_genomic_sigs
+#    output: 
+#        np=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_compare.np"),
+#        csv=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_compare.csv")
+#    params:
+#        k=nucl_ksizes,
+#        subsets=SUBSETS,
+#        molecule=["genomic", "rna", "cds"], 
+#    conda: "sourmash-2.3.0.yml"
+#    script: "sourmash-compare.wrapper.py"
+#    #shell:
+    #    """
+    #    sourmash compare -k {wildcards.k} -o {output.np} {input} 
+    #    sourmash compare -k {wildcards.k} ---csv {output.csv} {input} 
+    #    """
+
+def aggregate_sigs(w):
+    if (w.molecule == "protein"):
+        samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.faa.gz"))
+    else:
+        samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.fna.gz"))
+    sigfiles = expand(os.path.join(outbase, w.subset, "{w.molecule}_dir", "sigs", "{sample}_k{w.k}_scaled{scaled}_{w.encoding}.sig"), sample=samples)
+    return sigfiles
+
+# build all compare matrices: np and csv output
+rule sourmash_compare:
+    input: aggregate_sigs
+    output: 
+        np=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np"),
+        csv=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.csv")
+    params:
+        include_encodings = lambda wild: f"{wild.encoding}",
+        k = lambda wilder: f"{wilder.k}",
+    conda: "sourmash-2.3.0.yml"
+    script: "sourmash-compare.wrapper.py"
+
+        #k=prot_ksizes,
+        #subsets=SUBSETS,
+        #molecule=["protein", "rna", "cds"], 
+        #encoding=["protein", "dayhoff", "hp"], # do this in the desired outputs, rather than here!
+
+#shell:
+#        """
+#        #sourmash compare -k {wildcards.k} -o {output.np} {input} 
+#        #sourmash compare -k {wildcards.k} ---csv {output.csv} {input} 
+#        """
+
+
 # build all compare matrices: numpy output
 
 # sourmash plot each compare matrix numpy output

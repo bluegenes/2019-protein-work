@@ -33,7 +33,7 @@ csv_list = ["../2018-test_datasets/gingivalis.csv", "../2018-test_datasets/bacte
 
 # some hardcoded vars that can probably stay
 genbank_url = 'https://ftp.ncbi.nih.gov/genomes/all'
-genomic_dir, protein_dir, rna_dir, cds_dir = "gen0omic", "protein", "rna", "cds"
+genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
 genomic_ext = "_genomic.fna.gz"
 protein_ext = "_protein.faa.gz"
 rna_ext = "_rna_from_genomic.fna.gz"
