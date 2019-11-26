@@ -1,23 +1,36 @@
+"""
+Author: N. Tessa Pierce, UC Davis Lab for Data Intensive Biology
+Run: snakemake -s eggnog.rule --use-conda #--cores 26 --cluster "sbatch -t 10:00:00 -N 11 -n 26 -p bmm --mem=60gb" --jobs 5 -k --rerun-incomplete 
+"""
+
+rule an_nog_tate:
+    input: "p53_maNOG.emapper.annotations", "p53_maNOG.emapper.seed_orthologs"
+
 rule get_eggnog_dbs:
     output:
         data_dir = directory("eggnog_data")
     conda: "eggnog.yml"
     shell:
         """
-        download_eggnog_data.py -y -f -s --data_dir {output.data_dir}
+        mkdir -p {output.data_dir}
+        download_eggnog_data.py -y -f --data_dir {output.data_dir}
         """
+
 rule run_eggnog_mapper:
     input: 
-        fasta="test/p53.fa"
-        data_dir=directory("eggnog_data")
-    output: "p53_maNOG"
+        fasta="test-data/p53.fa",
+    output:
+        "p53_maNOG.emapper.annotations",
+        "p53_maNOG.emapper.seed_orthologs"
     params:
-        mode="diamond"
+        mode="diamond",
+        basename="p53_maNOG",
+        data_dir=directory("eggnog_data")
     conda: "eggnog.yml"
     #script: "eggnog.wrapper.py"
     shell:
         """
-        python emapper.py -i {input.fasta} --output {output} -m {params.mode} --data_dir {input.data_dir} --cpu {threads}
+        emapper.py -i {input.fasta} --output {params.basename} -m {params.mode} --data_dir {params.data_dir} --cpu {threads}
         """
 #rule split_fasta_into_chunks:
 #    input: "input_file.faa""
