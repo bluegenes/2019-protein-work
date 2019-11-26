@@ -131,29 +131,6 @@ rule compute_hp:
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
-
-#def aggregate_nucl_sigs(w):
-#    samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.fna.gz"))
-#    sigfiles = expand(os.path.join(outbase, w.subset, "{w.molecule}_dir", "sigs", "{sample}_k{w.k}_scaled{scaled}.sig"), sample=samples)
-#    return sigfiles
-
-#rule compare_nucl:
-#    input: aggregate_genomic_sigs
-#    output: 
-#        np=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_compare.np"),
-#        csv=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_compare.csv")
-#    params:
-#        k=nucl_ksizes,
-#        subsets=SUBSETS,
-#        molecule=["genomic", "rna", "cds"], 
-#    conda: "sourmash-2.3.0.yml"
-#    script: "sourmash-compare.wrapper.py"
-#    #shell:
-    #    """
-    #    sourmash compare -k {wildcards.k} -o {output.np} {input} 
-    #    sourmash compare -k {wildcards.k} ---csv {output.csv} {input} 
-    #    """
-
 def aggregate_sigs(w):
     if (w.molecule == "protein"):
         samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.faa.gz"))
@@ -169,10 +146,27 @@ rule sourmash_compare:
         np=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np"),
         csv=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.csv")
     params:
-        include_encodings = lambda wild: f"{wild.encoding}",
-        k = lambda wilder: f"{wilder.k}",
+        include_encodings = lambda w: f"{w.encoding}",
+        k = lambda w: f"{w.k}",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compare.wrapper.py"
+
+
+
+# sourmash plot each compare matrix numpy output
+
+
+
+
+
+#################
+
+# run regex on this pandas series instead:
+#sample_names = genomeInfo.iloc[:,2].str.split('/').str[-1]
+#sample_info = sample_names.str.extract(r"([A-Z]+)_(\d{3})(\d{3})(\d{3})")
+#sample_info.columns = ["alpha", "first", "second", "third"]
+#sample_info['name'] = sample_names 
+        
 
         #k=prot_ksizes,
         #subsets=SUBSETS,
@@ -184,16 +178,4 @@ rule sourmash_compare:
 #        #sourmash compare -k {wildcards.k} -o {output.np} {input} 
 #        #sourmash compare -k {wildcards.k} ---csv {output.csv} {input} 
 #        """
-
-
-# build all compare matrices: numpy output
-
-# sourmash plot each compare matrix numpy output
-
-
-# run regex on this pandas series instead:
-#sample_names = genomeInfo.iloc[:,2].str.split('/').str[-1]
-#sample_info = sample_names.str.extract(r"([A-Z]+)_(\d{3})(\d{3})(\d{3})")
-#sample_info.columns = ["alpha", "first", "second", "third"]
-#sample_info['name'] = sample_names 
 

@@ -10,8 +10,8 @@ going despite these failures.
 import os
 import re
 import pandas as pd
-#from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
-#HTTP = HTTPRemoteProvider()
+from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
+HTTP = HTTPRemoteProvider()
 from snakemake.remote.FTP import RemoteProvider as FTPRemoteProvider
 FTP = FTPRemoteProvider()
 
@@ -28,7 +28,7 @@ def build_genbank_url(row, base_url):
 
 # testing with some hardcoded vals
 outbase = "smash_testing"
-genome, protein, rna, cds = True, True, True, True, #False, False, False 
+genome, protein, rna, cds = True, False, False, False  #, True, True, True
 csv_list = ["../2018-test_datasets/gingivalis.csv", "../2018-test_datasets/bacteroides.csv", "../2018-test_datasets/denticola.csv"]
 
 # some hardcoded vars that can probably stay
@@ -67,6 +67,7 @@ rule all:
 
 # download datasets
 rule get_genomic_datasets:
+    #input: lambda wildcards: HTTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + genomic_ext, static=True, keep_local=True, allow_redirects=True) 
     input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + genomic_ext, static=True, keep_local=True, immediate_close=True)
     #output: f"{outbase}/{{csv_name}}/{genomic_dir}/{{sample}}_genomic.fna.gz"
     output: os.path.join(outbase, "{csv_name}", genomic_dir, "{sample}" + genomic_ext)
