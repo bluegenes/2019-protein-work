@@ -28,11 +28,12 @@ def build_genbank_url(row, base_url):
 
 # testing with some hardcoded vals
 outbase = "smash_testing"
-genome, protein, rna, cds = True, False, False, False  #, True, True, True
+genome, protein, rna, cds = True, True, True, True #False, False, False 
 csv_list = ["../2018-test_datasets/gingivalis.csv", "../2018-test_datasets/bacteroides.csv", "../2018-test_datasets/denticola.csv"]
 
 # some hardcoded vars that can probably stay
 genbank_url = 'https://ftp.ncbi.nih.gov/genomes/all'
+#genbank_url = 'ftp.ncbi.nih.gov/genomes/all'
 genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
 genomic_ext = "_genomic.fna.gz"
 protein_ext = "_protein.faa.gz"
@@ -67,27 +68,30 @@ rule all:
 
 # download datasets
 rule get_genomic_datasets:
-    #input: lambda wildcards: HTTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + genomic_ext, static=True, keep_local=True, allow_redirects=True) 
-    input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + genomic_ext, static=True, keep_local=True, immediate_close=True)
+    input: lambda wildcards: HTTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + genomic_ext, static=True, keep_local=True, allow_redirects=True) 
+    #input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + genomic_ext, static=True, keep_local=True, immediate_close=True)
     #output: f"{outbase}/{{csv_name}}/{genomic_dir}/{{sample}}_genomic.fna.gz"
     output: os.path.join(outbase, "{csv_name}", genomic_dir, "{sample}" + genomic_ext)
     conda: "dl-test-datasets.yml"
-    shell: "mv {input} {output} 2> {log}"
+    shell: "mv {input} {output}" #2> {log}"
 
 rule get_protein_datasets:
-    input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + protein_ext, static=True, keep_local=True, immediate_close=True)
+    input: lambda wildcards: HTTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + protein_ext, static=True, keep_local=True, allow_redirects=True)
+    #input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + protein_ext, static=True, keep_local=True, immediate_close=True)
     output: os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext)
     conda: "dl-test-datasets.yml"
-    shell: "mv {input} {output} 2> {log}"
+    shell: "mv {input} {output}" #2> {log}"
 
 rule get_rna_datasets:
-    input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + rna_ext, static=True, keep_local=True, immediate_close=True)
+    input: lambda wildcards: HTTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + rna_ext, static=True, keep_local=True, allow_redirects=True)
+    #input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + rna_ext, static=True, keep_local=True, immediate_close=True)
     output: os.path.join(outbase, "{csv_name}", rna_dir, "{sample}" + rna_ext)
     conda: "dl-test-datasets.yml"
-    shell: "mv {input} {output} 2> {log}"
+    shell: "mv {input} {output}" #2> {log}"
 
 rule get_cds_datasets:
-    input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample], static=True, keep_local=True, immediate_close=True)
+    input: lambda wildcards: HTTP.remote(linkdb[wildcards.csv_name][wildcards.sample] + cds_ext, static=True, keep_local=True, allow_redirects=True)
+    #input: lambda wildcards: FTP.remote(linkdb[wildcards.csv_name][wildcards.sample], static=True, keep_local=True, immediate_close=True)
     output: os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + cds_ext)
     conda: "dl-test-datasets.yml"
-    shell: "mv {input} {output} 2> {log}"
+    shell: "mv {input} {output}"  #2> {log}"
