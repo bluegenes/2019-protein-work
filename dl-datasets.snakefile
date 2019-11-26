@@ -1,6 +1,10 @@
 """
 Author: N Tessa Pierce, UC Davis Lab for Data Intensive Biology
-Run: snakemake -s  biobombe_initial_ksweep.snakefile --use-conda -n
+Run: snakemake -s  biobombe_initial_ksweep.snakefile --use-conda -k -n
+
+Note: some protein, rna, and cds downloads will fail because those datasets
+are unavailable for that sample. Use the `-k` flag to tell snakemake to keep
+going despite these failures. 
 """
 
 import os
@@ -15,8 +19,9 @@ def build_genbank_url(row, base_url):
     sample_name = row[2].split('/')[-1]
     alpha,first,second,third = re.match("([A-Z]+)_(\d{3})(\d{3})(\d{3})", sample_name).groups()
     name = sample_name.split('_genomic.fna.gz')[0]
-    # add to df
+    # build folder path
     genbank_path =os.path.join(base_url,alpha,first,second,third,name)
+    # add to df
     row["name"] = name
     row["base_url"] = os.path.join(genbank_path, name)
     return row 
