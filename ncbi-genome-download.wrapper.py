@@ -24,6 +24,7 @@ protein_out = snakemake.output.get("protein")
 rna_out = snakemake.output.get("rna")
 cds_out = snakemake.output.get("cds")
 failed_out= snakemake.params.get("failed", "ncbi_failed_downloads.txt")
+ghost= snakemake.params.get("ghost_files", False)
 
 outfiles = [genomic_out, protein_out, rna_out, cds_out]
 assert (list(map(bool, outfiles)).count(True) >= 1), "please specify at least one output format by using the 'genomic', 'protein', 'rna', 'cds' keywords in the output field)"
@@ -39,8 +40,9 @@ if genomic_out:
         shell("ncbi-genome-download all -A {accession} --format 'fasta' -s genbank -p {snakemake.threads} {log}")
         shell("mv {tmp_genomic} {genomic_out}")
     except:
-        #shell("touch {genomic_out}")
         shell("echo {genomic_out} >> {failed_out}")
+        if ghost:
+            shell("touch {genomic_out}")
 
 if protein_out:
     tmp_protein=os.path.join(dl_dir,"*_protein.faa.gz")
@@ -48,8 +50,9 @@ if protein_out:
         shell("ncbi-genome-download all -A {accession} --format 'protein-fasta' -s genbank -p {snakemake.threads} {log}")
         shell("mv {tmp_protein} {protein_out}")
     except:
-        #shell("touch {protein_out}")
         shell("echo {protein_out} >> {failed_out}")
+        if ghost:
+            shell("touch {protein_out}")
 
 if rna_out:
     tmp_rna=os.path.join(dl_dir,"*_rna_from_genomic.fna.gz")
@@ -57,8 +60,9 @@ if rna_out:
         shell("ncbi-genome-download all -A {accession} --format 'rna-fna' -s genbank -p {snakemake.threads} {log}")
         shell("mv {tmp_rna} {rna_out}")
     except:
-        #shell("touch {rna_out}")
         shell("echo {rna_out} >> {failed_out}")
+        if ghost:
+            shell("touch {rna_out}")
 
 if cds_out:
     tmp_cds= os.path.join(dl_dir,"*_cds_from_genomic.fna.gz")
@@ -66,5 +70,6 @@ if cds_out:
         shell("ncbi-genome-download all -A {accession} --format 'cds-fasta' -s genbank -p {snakemake.threads} {log}")
         shell("mv {tmp_cds} {cds_out}")
     except:
-        #shell("touch {cds_out}")
         shell("echo {cds_out} >> {failed_out}")
+        if ghost:
+            shell("touch {cds_out}")

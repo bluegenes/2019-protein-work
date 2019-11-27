@@ -1,6 +1,8 @@
 """
 Author: N Tessa Pierce, UC Davis Lab for Data Intensive Biology
 Run: snakemake -s  biobombe_initial_ksweep.snakefile --use-conda -k -n
+Note: some downloads will fail bc the rna/cds/protein/etc files do not
+actually exist.
 """
 
 import os
@@ -63,6 +65,7 @@ rule ncbi_genome_download:
          cds = os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + cds_ext),
     params: 
         accession= lambda w: linkdb[w.csv_name][w.sample],
-        failed = os.path.join(outbase, "ncbi_failed_downloads.txt")
+        failed = os.path.join(outbase, "ncbi_failed_downloads.txt"),
+        ghost_files=True # make ghost files for failed downloads so snakemake is happy
     conda: "dl-test-datasets.yml"
     script: "ncbi-genome-download.wrapper.py"
