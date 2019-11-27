@@ -10,6 +10,7 @@ import re
 genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
 outbase = "smash_testing"
 compare_dir = "compare"
+plots_dir = "plots"
 
 genomic_ext = "_genomic.fna.gz"
 protein_ext = "_protein.faa.gz"
@@ -41,9 +42,18 @@ prot_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol
 nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
 translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
 
+prot_compare_plots = expand(os.path.join(outbase,compare_dir, plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
+nucl_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
+translate_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir,"{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
+
 rule all:
-    input: prot_compare_files, nucl_compare_files, translate_compare_files
+    #input: prot_compare_files, nucl_compare_files, translate_compare_files
+    input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
     #expand(os.path.join(outbase, compare_dir, "{subset}_k{k}_genomic_compare.csv"), subset=SUBSETS, k=nucl_ksizes)
+
+#subworkflow download_datasets:
+#    snakefile:
+#        "dl-ncbi.snakefile"
 
 # compute nucleotide sigs
 rule compute_genomic:
@@ -108,7 +118,6 @@ rule compute_prot:
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
-
 # compute dayhoff sigs
 rule compute_dayhoff:
     input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
@@ -133,10 +142,10 @@ rule compute_hp:
 
 def aggregate_sigs(w):
     if (w.molecule == "protein"):
-        samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.faa.gz"))
+        samples = glob_wildcards(os.path.join(outbase, w.subset, f"{w.molecule}_dir", "*.faa.gz"))
     else:
-        samples = glob_wildcards(os.path.join(outbase, w.subset, "{w.molecule}_dir", "{sample}.fna.gz"))
-    sigfiles = expand(os.path.join(outbase, w.subset, "{w.molecule}_dir", "sigs", "{sample}_k{w.k}_scaled{scaled}_{w.encoding}.sig"), sample=samples)
+        samples = glob_wildcards(os.path.join(outbase, w.subset, f"{w.molecule}_dir", "*.fna.gz"))
+    sigfiles = expand(os.path.join(outbase, w.subset, f"{w.molecule}_dir", "sigs", f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig"), sample=samples)
     return sigfiles
 
 # build all compare matrices: np and csv output
@@ -151,13 +160,17 @@ rule sourmash_compare:
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compare.wrapper.py"
 
-
-
 # sourmash plot each compare matrix numpy output
-
-
-
-
+rule sourmash_plot:
+    input: os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np")
+    output: os.path.join(outbase, compare_dir, plots_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.pdf")
+    params:
+        plot_dir= os.path.join(outbase, compare_dir, plots_dir),
+    conda: "sourmash-2.3.0.yml"
+    shell:
+        """
+        sourmash plot --output-dir {params.plot_dir} --labels --pdf {input}
+        """
 
 #################
 
