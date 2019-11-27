@@ -27,7 +27,7 @@ cds_ext = "_cds_from_genomic.fna.gz"
 compare_extensions= [".np", ".csv"]
 
 SUBSETS=["bacteroides", "denticola", "gingivalis"]
-prot_moltypes=["protein", "rna", "cds"]
+prot_moltypes=["protein"]
 prot_encodings=["protein", "dayhoff", "hp"]
 prot_ksizes = ["7", "11", "17"]
 
@@ -40,17 +40,17 @@ translate_ksizes = ["21", "33", "51"] # need to be divisible by 3
 
 # problem == overexpanding here!
 prot_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
-
-nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
+nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=nucl_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
 translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
 
 prot_compare_plots = expand(os.path.join(outbase,compare_dir, plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
-nucl_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
+nucl_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=nucl_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
+
 translate_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir,"{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
 
 rule all:
-    input: prot_compare_files #, nucl_compare_files, translate_compare_files
-#    input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
+    #input: prot_compare_files #, nucl_compare_files, translate_compare_files
+    input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
     #expand(os.path.join(outbase, compare_dir, "{subset}_k{k}_genomic_compare.csv"), subset=SUBSETS, k=nucl_ksizes)
 
 # compute nucleotide sigs
@@ -59,7 +59,7 @@ rule compute_genomic:
     output: os.path.join(outbase, "{subset}", genomic_dir, "sigs", "{sample}_k{k}_scaled{scaled}.sig" )
     params:
         scaled=2000,
-        k=nucl_ksizes,
+        k = lambda w: f"{w.k}",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
@@ -69,16 +69,16 @@ rule compute_rna:
     output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}.sig" )
     params:
         scaled=2000,
-        k=nucl_ksizes,
+        k= lambda w: w.k
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
 rule compute_cds:
-    input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + rna_ext)
+    input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + cds_ext)
     output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled{scaled}.sig" )
     params:
         scaled=2000,
-        k=nucl_ksizes,
+        k = lambda w: f"{w.k}",
         extra=" --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
@@ -89,7 +89,7 @@ rule compute_translated_rna:
     output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}_translated.sig" )
     params:
         scaled=2000,
-        k=translate_ksizes,
+        k = lambda w: f"{w.k}",
         extra=" --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
@@ -99,7 +99,7 @@ rule compute_translated_cds:
     output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled{scaled}_translated.sig" )
     params:
         scaled=2000,
-        k=translate_ksizes,
+        k = lambda w: f"{w.k}",
         extra=" --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
@@ -110,7 +110,7 @@ rule compute_prot:
     output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_protein.sig" )
     params:
         scaled=2000,
-        k=prot_ksizes,
+        k = lambda w: f"{w.k}",
         extra=" --input-is-protein --protein ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
@@ -121,7 +121,7 @@ rule compute_dayhoff:
     output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_dayhoff.sig" )
     params:
         scaled=2000,
-        k=prot_ksizes,
+        k = lambda w: f"{w.k}",
         extra=" --input-is-protein --dayhoff ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
@@ -132,7 +132,7 @@ rule compute_hp:
     output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled{scaled}_hp.sig" )
     params:
         scaled=2000,
-        k=prot_ksizes,
+        k = lambda w: f"{w.k}",
         extra=" --input-is-protein --hp ",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
