@@ -62,19 +62,7 @@ rule ncbi_genome_download:
          rna = os.path.join(outbase, "{csv_name}", rna_dir, "{sample}" + rna_ext),
          cds = os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + cds_ext),
     params: 
-        accession= lambda w: linkdb[w.csv_name][w.sample]
+        accession= lambda w: linkdb[w.csv_name][w.sample],
+        failed_list = os.path.join(outbase, "ncbi_failed_downloads.txt")
     conda: "dl-test-datasets.yml"
     script: "ncbi-genome-download.wrapper.py"
-     
-
-        
-    #params:
-        #dl_genomic = lambda w: os.path.join("genbank","*",linkdb[w.name],"*_genomic.fna.gz"),
-        ##dl_protein = lambda w: os.path.join("genbank","*",linkdb[w.name],"*_protein.faa.gz"),
-        #nl_rna = lambda w: os.path.join("genbank","*",linkdb[w.name],"*_rna_from_genomic.fna.gz"),
-        #dl_cds = lambda w: os.path.join("genbank","*",linkdb[w.name],"*_cds_from_genomic.fna.gz")
-    #shell:
-    #    """
-    #    ncbi-genome-download all -A {accession} --format fasta -s genbank -N {threads}
-    #    mv {params.dl_genomic} {output.genomic}
-    #    """
