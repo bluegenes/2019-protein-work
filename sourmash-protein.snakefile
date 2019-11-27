@@ -38,7 +38,9 @@ nucl_ksizes = ["21", "31", "51"]
 translate_moltypes=["rna", "cds"]
 translate_ksizes = ["21", "33", "51"] # need to be divisible by 3
 
+# problem == overexpanding here!
 prot_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
+
 nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
 translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
 
@@ -136,13 +138,17 @@ rule compute_hp:
     script: "sourmash-compute.wrapper.py"
 
 def aggregate_sigs(w):
+    ## clean this up!
     if (w.molecule == "protein"):
-        protein_path = os.path.join(outbase, w.subset, f"{w.molecule}", "{sample}.faa.gz")
-        samples = glob_wildcards(protein_path).sample
-    else:
-        samples = glob_wildcards(os.path.join(outbase, w.subset, f"{w.molecule}", "*.fna.gz")).sample
-    sigfiles = expand(os.path.join(outbase, w.subset, f"{w.molecule}", "sigs",f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig"), sample=samples)
-    print(sigfiles)
+        path = os.path.join(outbase, w.subset, "protein", "{sample}_protein.faa.gz")
+    elif (w.molecule == "genomic"):
+        path = os.path.join(outbase, w.subset, "genomic", "{sample}_genomic.fna.gz")
+    elif (w.molecule == "rna"):
+        path = os.path.join(outbase, w.subset, "rna", "{sample}_rna_from_genomic.fna.gz")
+    elif (w.molecule == "cds"):
+        path = os.path.join(outbase, w.subset, "cds", "{sample}_cds_from_genomic.fna.gz")
+    sigbase= os.path.join(outbase, w.subset, f"{w.molecule}", "sigs",f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig")
+    sigfiles = expand(sigbase, sample=glob_wildcards(path).sample)
     return sigfiles
 
 # build all compare matrices: np and csv output

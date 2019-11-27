@@ -11,9 +11,8 @@ from snakemake.shell import shell
 # handle inputs
 sigs = snakemake.input.get("sigs")
 traverse_dir = snakemake.input.get("traverse_sig_dir")
-assert (sigs is not None) or traverse_dir is not None, "either r1 and r2 (paired), or r (unpaired) are required as input"
 
-assert (list(map(bool, [sigs,traverse_dir])).count(True) == 1), "please specify either a directory to traverse (traverse_sig_dir) OR a list of signatures (sigs)")
+assert (sigs is not None or traverse_dir is not None), "please specify either a directory to traverse (traverse_sig_dir) OR a list of signatures (sigs)"
 
 if sigs:
     input_cmd = sigs
@@ -67,4 +66,4 @@ log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 if np_out:
     shell("sourmash compare {encoding_cmd} {abund_cmd} -k {k} -p {snakemake.threads} -o {np_out} {extra} {input_cmd} {log}")
 if csv_out:
-    shell("sourmash compare {encoding_cmd} }abund_cmd} -k {k} -p {snakemake.threads} --csv {csv_out} {extra} {input_cmd} {log}")
+    shell("sourmash compare {encoding_cmd} {abund_cmd} -k {k} -p {snakemake.threads} --csv {csv_out} {extra} {input_cmd} {log}")
