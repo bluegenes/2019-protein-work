@@ -63,6 +63,6 @@ rule ncbi_genome_download:
          cds = os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + cds_ext),
     params: 
         accession= lambda w: linkdb[w.csv_name][w.sample],
-        failed_list = os.path.join(outbase, "ncbi_failed_downloads.txt")
+        failed = os.path.join(outbase, "ncbi_failed_downloads.txt")
     conda: "dl-test-datasets.yml"
     script: "ncbi-genome-download.wrapper.py"
