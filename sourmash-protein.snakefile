@@ -39,21 +39,17 @@ translate_moltypes=["rna", "cds"]
 translate_ksizes = ["21", "33", "51"] # need to be divisible by 3
 
 prot_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
-nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
-translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
+nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
+translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
 
 prot_compare_plots = expand(os.path.join(outbase,compare_dir, plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
 nucl_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=prot_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
 translate_compare_plots = expand(os.path.join(outbase,compare_dir,plots_dir,"{subset}_k{k}_{mol}_{enc}_compare.pdf"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_extensions)
 
 rule all:
-    #input: prot_compare_files, nucl_compare_files, translate_compare_files
-    input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
+    input: prot_compare_files #, nucl_compare_files, translate_compare_files
+#    input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
     #expand(os.path.join(outbase, compare_dir, "{subset}_k{k}_genomic_compare.csv"), subset=SUBSETS, k=nucl_ksizes)
-
-#subworkflow download_datasets:
-#    snakefile:
-#        "dl-ncbi.snakefile"
 
 # compute nucleotide sigs
 rule compute_genomic:
@@ -86,7 +82,6 @@ rule compute_cds:
     script: "sourmash-compute.wrapper.py"
 
 # 6 frame translation --> signatures
-### why are we using rna_from_genomic over cds .. check, bc cds = only coding = cleaner!?
 rule compute_translated_rna:
     input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
     output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled{scaled}_translated.sig" )
@@ -142,15 +137,17 @@ rule compute_hp:
 
 def aggregate_sigs(w):
     if (w.molecule == "protein"):
-        samples = glob_wildcards(os.path.join(outbase, w.subset, f"{w.molecule}_dir", "*.faa.gz"))
+        protein_path = os.path.join(outbase, w.subset, f"{w.molecule}", "{sample}.faa.gz")
+        samples = glob_wildcards(protein_path).sample
     else:
-        samples = glob_wildcards(os.path.join(outbase, w.subset, f"{w.molecule}_dir", "*.fna.gz"))
-    sigfiles = expand(os.path.join(outbase, w.subset, f"{w.molecule}_dir", "sigs", f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig"), sample=samples)
+        samples = glob_wildcards(os.path.join(outbase, w.subset, f"{w.molecule}", "*.fna.gz")).sample
+    sigfiles = expand(os.path.join(outbase, w.subset, f"{w.molecule}", "sigs",f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig"), sample=samples)
+    print(sigfiles)
     return sigfiles
 
 # build all compare matrices: np and csv output
 rule sourmash_compare:
-    input: aggregate_sigs
+    input: sigs=aggregate_sigs
     output: 
         np=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np"),
         csv=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.csv")
