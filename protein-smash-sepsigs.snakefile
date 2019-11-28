@@ -32,7 +32,6 @@ translate_moltypes=["rna", "cds"]
 translate_ksizes = ["21", "33", "51"] # need to be divisible by 3
 translate_encodings=["trprotein", "trdayhoff", "trhp"]
 
-# problem == overexpanding here!
 prot_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_extensions)
 nucl_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=nucl_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_extensions)
 translate_compare_files = expand(os.path.join(outbase,compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=translate_encodings, ext=compare_extensions)
