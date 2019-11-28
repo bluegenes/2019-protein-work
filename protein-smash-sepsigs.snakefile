@@ -1,6 +1,6 @@
 """
 Author: N Tessa Pierce, UC Davis Lab for Data Intensive Biology
-Run: snakemake -s  biobombe_initial_ksweep.snakefile --use-conda -n
+Run: snakemake -s  protein-smash-sepsigs.snakefile --use-conda -n
 """
 
 import os
