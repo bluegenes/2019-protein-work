@@ -27,7 +27,7 @@ nucl_encodings=["nucl"]
 nucl_ksizes = ["21", "31", "51"]
 
 translate_moltypes=["rna", "cds"]
-#translate_ksizes = ["21", "33", "51"] # need to be divisible by 3. these divide to the prot_ksizes, above
+translate_ksizes = ["21", "33", "51"] # need to be divisible by 3. these divide to the prot_ksizes, above
 #translate_encodings=["trprotein", "trdayhoff", "trhp"]
 
 prot_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_exts)
@@ -44,7 +44,7 @@ rule all:
 
 # compute nucleotide sigs
 rule compute_nucl:
-    input: os.path.join(outbase, "/{subset}/{mol}/{sample}.fna.gz"]) 
+    input: os.path.join(outbase, "/{subset}/{mol}/{sample}.fna.gz") 
     #input: os.path.join(outbase, "{subset}", "{mol}", "{sample}.fna.gz") 
     output: os.path.join(outbase, "{subset}", "{mol}", "sigs", "{sample}.sig")
     params: 
@@ -55,11 +55,11 @@ rule compute_nucl:
 
 # compute protein sigs
 rule compute_protein:
-    input: os.path.join(outbase, "{subset}", "{mol}", "{sample}.faa.gz"])
+    input: os.path.join(outbase, "{subset}", "{mol}", "{sample}.faa.gz")
     output: os.path.join(outbase, "{subset}", "{mol}", "sigs", "{sample}.sig" )
     params:
         scaled=2000,
-        k=protein_ksizes,
+        k=prot_ksizes,
         extra=" --input-is-protein --protein --dayhoff --hp",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
@@ -89,19 +89,19 @@ all_encodings = ["nucl", "protein", "dayhoff", "hp"]
 rule sourmash_compare:
     input: sigs=aggregate_sigs
     output: 
-        np=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np"),
-        csv=os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.csv")
+        np=os.path.join(compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np"),
+        csv=os.path.join(compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.csv")
     params:
         include_encodings = lambda w: f"{w.encoding}",
-        exclude_encodings = all_encodings.remove(f"{w.encoding}"),
+        exclude_encodings = lambda w: all_encodings.remove(f"{w.encoding}"),
         k = lambda w: f"{w.k}",
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compare.wrapper.py"
 
 # sourmash plot each compare matrix numpy output
 rule sourmash_plot:
-    input: os.path.join(outbase, compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np")
-    output: os.path.join(outbase, compare_dir, plots_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.pdf")
+    input: os.path.join(compare_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np")
+    output: os.path.join(plots_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.pdf")
     params:
         plot_dir= os.path.join(outbase, compare_dir, plots_dir),
     conda: "sourmash-2.3.0.yml"
