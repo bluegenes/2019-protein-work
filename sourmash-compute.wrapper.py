@@ -17,5 +17,5 @@ k = ",".join(map(str, k))
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 
 shell(
-    "sourmash compute --scaled {scaled} -k {k} {snakemake.input} -o {snakemake.output} {extra} {log}"
+    "sourmash compute --scaled {scaled} -k {k} {snakemake.input} -o {snakemake.output} -p {snakemake.threads} {extra} {log}"
 )

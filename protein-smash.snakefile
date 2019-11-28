@@ -8,7 +8,7 @@ import re
 
 # set some useful vars 
 genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
-outbase = "protein-smash"
+outbase = "smash-testing"
 compare_dir = os.path.join(outbase, "compare")
 plots_dir = os.path.join(outbase, "plots")
 
@@ -27,7 +27,7 @@ nucl_encodings=["nucl"]
 nucl_ksizes = ["21", "31", "51"]
 
 translate_moltypes=["rna", "cds"]
-translate_ksizes = ["21", "33", "51"] # need to be divisible by 3. these divide to the prot_ksizes, above
+translate_ksizes = ["21","33","51"] # need to be divisible by 3. these divide to the prot_ksizes, above. need to also do 31, but might run into /3 warning/error
 #translate_encodings=["trprotein", "trdayhoff", "trhp"]
 
 prot_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_exts)
@@ -42,11 +42,20 @@ rule all:
     #input: prot_compare_files #, nucl_compare_files, translate_compare_files
     input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
 
+rule rm_failed_dl:
+    input: os.path.join(outbase, "ncbi_failed_downloads.txt") 
+    output: os.path.join(outbase, "ncbi_failed_downloads.txt.rm")
+    shell:
+        """
+        xargs rm < {input}
+        touch {output}
+        """
+
+
 # compute nucleotide sigs
-rule compute_nucl:
-    input: os.path.join(outbase, "/{subset}/{mol}/{sample}.fna.gz") 
-    #input: os.path.join(outbase, "{subset}", "{mol}", "{sample}.fna.gz") 
-    output: os.path.join(outbase, "{subset}", "{mol}", "sigs", "{sample}.sig")
+rule compute_genomic:
+    input: os.path.join(outbase, "{subset}", "genomic", "{sample}.fna.gz") 
+    output: os.path.join(outbase, "{subset}", "genomic", "sigs", "{sample}.sig")
     params: 
         k=nucl_ksizes,
         scaled=2000,
@@ -61,10 +70,12 @@ rule compute_protein:
         scaled=2000,
         k=prot_ksizes,
         extra=" --input-is-protein --protein --dayhoff --hp",
+    wildcard_constraints:
+         mol=prot_moltypes
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
-# compute protein sigs from 6-frame translation of rna, cds data
+# compute nucl and protein sigs from 6-frame translation of rna, cds data
 rule compute_translated:
     input: os.path.join(outbase, "{subset}", "{mol}", "{sample}.fna.gz") 
     output: os.path.join(outbase, "{subset}", "{mol}", "sigs", "{sample}.sig" )
@@ -72,6 +83,8 @@ rule compute_translated:
         scaled=2000,
         k=translate_ksizes,
         extra=" --protein --dayhoff --hp",
+    wildcard_constraints:
+         mol=translate_moltypes
     conda: "sourmash-2.3.0.yml"
     script: "sourmash-compute.wrapper.py"
 
@@ -80,7 +93,7 @@ def aggregate_sigs(w):
         path = os.path.join(outbase, w.subset, mol_dir[w.molecule], "{sample}.faa.gz")
     else:
         path = os.path.join(outbase, w.subset, mol_dir[w.molecule], "{sample}.fna.gz")
-    sigbase= os.path.join(outbase, w.subset, mol_dir[w.molecule], "sigs", "{sample}.sig")
+    sigbase= os.path.join(outbase, w.subset, mol_dir[w.molecule], "sigs","{sample}.sig")
     sigfiles = expand(sigbase, sample=glob_wildcards(path).sample)
     return sigfiles
 

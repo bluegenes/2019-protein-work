@@ -8,9 +8,9 @@ import re
 
 # set some useful vars 
 genomic_dir, protein_dir, rna_dir, cds_dir = "genomic", "protein", "rna", "cds"
-outbase = "smash_testing"
-compare_dir = "compare"
-plots_dir = "plots"
+outbase = "smash-testing"
+compare_dir = "compare_sepsigs"
+plots_dir = "plots_sepsigs"
 
 genomic_ext = "_genomic.fna.gz"
 protein_ext = "_protein.faa.gz"
@@ -47,7 +47,7 @@ rule all:
 # compute nucleotide sigs
 rule compute_genomic:
     input: os.path.join(outbase, "{subset}", genomic_dir, "{sample}" + genomic_ext)
-    output: os.path.join(outbase, "{subset}", genomic_dir, "sigs", "{sample}_k{k}_scaled2000_nucl.sig" )
+    output: os.path.join(outbase, "{subset}", genomic_dir, "sepsigs", "{sample}_k{k}_scaled2000_nucl.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -57,7 +57,7 @@ rule compute_genomic:
 # compute rna sigs
 rule compute_rna:
     input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled2000_nucl.sig" )
+    output: os.path.join(outbase, "{subset}", rna_dir, "sepsigs", "{sample}_k{k}_scaled2000_nucl.sig" )
     params:
         scaled=2000,
         k= lambda w: w.k
@@ -66,7 +66,7 @@ rule compute_rna:
 
 rule compute_cds:
     input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + cds_ext)
-    output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled2000_nucl.sig" )
+    output: os.path.join(outbase, "{subset}", cds_dir, "sepsigs", "{sample}_k{k}_scaled2000_nucl.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -76,7 +76,7 @@ rule compute_cds:
 # 6 frame translation --> signatures
 rule compute_rna_tr_protein:
     input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled2000_trprotein.sig" )
+    output: os.path.join(outbase, "{subset}", rna_dir, "sepsigs", "{sample}_k{k}_scaled2000_trprotein.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -86,7 +86,7 @@ rule compute_rna_tr_protein:
 
 rule compute_rna_tr_dayhoff:
     input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled2000_trdayhoff.sig" )
+    output: os.path.join(outbase, "{subset}", rna_dir, "sepsigs", "{sample}_k{k}_scaled2000_trdayhoff.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -96,7 +96,7 @@ rule compute_rna_tr_dayhoff:
 
 rule compute_rna_tr_hp:
     input: os.path.join(outbase, "{subset}", rna_dir, "{sample}" + rna_ext)
-    output: os.path.join(outbase, "{subset}", rna_dir, "sigs", "{sample}_k{k}_scaled2000_trhp.sig" )
+    output: os.path.join(outbase, "{subset}", rna_dir, "sepsigs", "{sample}_k{k}_scaled2000_trhp.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -106,7 +106,7 @@ rule compute_rna_tr_hp:
 
 rule compute_cds_tr_protein:
     input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + cds_ext)
-    output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled2000_trprotein.sig" )
+    output: os.path.join(outbase, "{subset}", cds_dir, "sepsigs", "{sample}_k{k}_scaled2000_trprotein.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -116,7 +116,7 @@ rule compute_cds_tr_protein:
 
 rule compute_cds_tr_dayhoff:
     input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + cds_ext)
-    output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled2000_trdayhoff.sig" )
+    output: os.path.join(outbase, "{subset}", cds_dir, "sepsigs", "{sample}_k{k}_scaled2000_trdayhoff.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -126,7 +126,7 @@ rule compute_cds_tr_dayhoff:
 
 rule compute_cds_tr_hp:
     input: os.path.join(outbase, "{subset}", cds_dir, "{sample}" + cds_ext)
-    output: os.path.join(outbase, "{subset}", cds_dir, "sigs", "{sample}_k{k}_scaled2000_trhp.sig" )
+    output: os.path.join(outbase, "{subset}", cds_dir, "sepsigs", "{sample}_k{k}_scaled2000_trhp.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -137,7 +137,7 @@ rule compute_cds_tr_hp:
 # compute protein sigs
 rule compute_prot:
     input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
-    output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled2000_protein.sig" )
+    output: os.path.join(outbase, "{subset}", protein_dir, "sepsigs", "{sample}_k{k}_scaled2000_protein.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -148,7 +148,7 @@ rule compute_prot:
 # compute dayhoff sigs
 rule compute_dayhoff:
     input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
-    output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled2000_dayhoff.sig" )
+    output: os.path.join(outbase, "{subset}", protein_dir, "sepsigs", "{sample}_k{k}_scaled2000_dayhoff.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -159,7 +159,7 @@ rule compute_dayhoff:
 # compute hp sigs
 rule compute_hp:
     input: os.path.join(outbase, "{subset}", protein_dir, "{sample}" + protein_ext)
-    output: os.path.join(outbase, "{subset}", protein_dir, "sigs", "{sample}_k{k}_scaled2000_hp.sig" )
+    output: os.path.join(outbase, "{subset}", protein_dir, "sepsigs", "{sample}_k{k}_scaled2000_hp.sig" )
     params:
         scaled=2000,
         k = lambda w: f"{w.k}",
@@ -177,7 +177,7 @@ def aggregate_sigs(w):
         path = os.path.join(outbase, w.subset, rna_dir, "{sample}_rna_from_genomic.fna.gz")
     elif (w.molecule == "cds"):
         path = os.path.join(outbase, w.subset, cds_dir, "{sample}_cds_from_genomic.fna.gz")
-    sigbase= os.path.join(outbase, w.subset, f"{w.molecule}", "sigs",f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig")
+    sigbase= os.path.join(outbase, w.subset, f"{w.molecule}", "sepsigs",f"{{sample}}_k{w.k}_scaled2000_{w.encoding}.sig")
     sigfiles = expand(sigbase, sample=glob_wildcards(path).sample)
     return sigfiles
 

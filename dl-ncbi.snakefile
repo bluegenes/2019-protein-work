@@ -20,7 +20,7 @@ def grab_name(row):
     return row 
 
 # testing with some hardcoded vals
-outbase = "smash_testing"
+outbase = "smash-testing"
 genome, protein, rna, cds = True, True, True, True #False, False, False 
 csv_list = ["../2018-test_datasets/gingivalis.csv", "../2018-test_datasets/bacteroides.csv", "../2018-test_datasets/denticola.csv"]
 
