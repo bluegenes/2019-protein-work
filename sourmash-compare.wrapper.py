@@ -43,11 +43,19 @@ exclude = [exclude] if isinstance(exclude, str) else exclude
 for encoding in include:
     if encoding == "nucl":
         encoding_cmd +=" --dna "
+        if 'nucl' in exclude:
+            exclude.remove('nucl')
     if encoding == "protein":
         encoding_cmd += " --protein "
+        if 'protein' in exclude:
+            exclude.remove('protein')
     if encoding == "dayhoff":
         encoding_cmd += " --dayhoff "
+        if 'dayhoff' in exclude:
+            exclude.remove('dayhoff')
     if encoding == "hp":
+        if 'hp' in exclude:
+            exclude.remove('hp')
         encoding_cmd += " --hp "
 
 for encoding in exclude:

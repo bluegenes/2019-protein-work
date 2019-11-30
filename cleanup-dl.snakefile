@@ -15,5 +15,5 @@ rule rm_failed_dl:
     shell:
         """
         xargs rm < {input}
-        touch {output}
+        mv {input} {output}
         """

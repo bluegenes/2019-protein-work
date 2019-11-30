@@ -57,7 +57,7 @@ if protein_out:
 if rna_out:
     tmp_rna=os.path.join(dl_dir,"*_rna_from_genomic.fna.gz")
     try:
-        shell("ncbi-genome-download all -A {accession} --format 'rna-fna' -s genbank -p {snakemake.threads} {log}")
+        shell("ncbi-genome-download all -A {accession} --format 'rna-fasta' -s genbank -p {snakemake.threads} {log}")
         shell("mv {tmp_rna} {rna_out}")
     except:
         shell("echo {rna_out} >> {failed_out}")
