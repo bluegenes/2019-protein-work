@@ -16,4 +16,5 @@ rule rm_failed_dl:
         """
         xargs rm < {input}
         mv {input} {output}
+        find . -type f -empty -delete # find and delete any empty files in this dir or below
         """

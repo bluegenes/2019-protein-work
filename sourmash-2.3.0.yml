@@ -3,4 +3,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - sourmash==2.3.0
+  #- sourmash==2.3.0
+  - conda-forge::jq=1.6
+  - pip
+  - git
+  - pip:
+    - "git+https://github.com/dib-lab/sourmash.git"

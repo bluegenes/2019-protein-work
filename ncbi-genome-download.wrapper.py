@@ -32,7 +32,8 @@ assert (list(map(bool, outfiles)).count(True) >= 1), "please specify at least on
 log = snakemake.log_fmt_shell(stdout=True, stderr=True)
 
 dl_dir=os.path.join("genbank","*",accession)
-
+# init file (overwrite if new download session)
+shell("cat /dev/null > {failed_out}")
 # run ncbi-genome-download and if it works,  move output to the right spot
 if genomic_out:
     tmp_genomic=os.path.join(dl_dir,"*_genomic.fna.gz")
