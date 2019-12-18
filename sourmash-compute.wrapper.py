@@ -42,6 +42,7 @@ k = ",".join(map(str, k))
 moltype_cmd = " --" + " --".join(compute_moltypes)
 if input_is_protein:
     moltype_cmd += " --input-is-protein "
+abund_cmd = ""
 if track_abundance:
     abund_cmd = " --track-abundance "
 
@@ -58,8 +59,9 @@ if nucl_only_ksizes:
     # compute protein
     shell("sourmash compute {moltype_cmd} {abund_cmd} --scaled {scaled} -k {k} {snakemake.input} -o {prot_output} -p {snakemake.threads} {extra} 2>> {snakemake.log}")
     # use jq to cat the signature files with correct JSON
-    shell("jq add -s {prot_output} {nucl_only_output} > {snakemake.output}")
-    #shell("rm -f {prot_output} {nucl_only_output}")
+    shell("sourmash signature cat -o {snakemake.output} {prot_output} {nucl_only_output}")
+    #shell("jq add -s {prot_output} {nucl_only_output} > {snakemake.output}")
+    shell("rm -f {prot_output} {nucl_only_output}")
 else:
     shell(
         "sourmash compute {moltype_cmd} {abund_cmd} --scaled {scaled} -k {k} {snakemake.input} -o {snakemake.output} -p {snakemake.threads} {extra} {log}"

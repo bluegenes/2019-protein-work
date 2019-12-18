@@ -29,16 +29,19 @@ nucl_encodings=["nucl"]
 nucl_ksizes = ["21", "31", "51"]
 
 translate_moltypes=["rna", "cds"]
-translate_ksizes = ["21","31", "33", "51"]
-#translate_ksizes = ["21", "31", "51"]
+translate_ksizes_compute = ["21", "31", "33", "51"]
+translate_ksizes_compare = ["21", "33", "51"]
 
 prot_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_exts)
 nucl_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=nucl_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_exts)
-translate_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=translate_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_exts)
+translate_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k=translate_ksizes_compare, mol=translate_moltypes, enc=prot_encodings, ext=compare_exts)
+
+translate_nucl_compare_files = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare{ext}"), subset=SUBSETS, k="31", mol=translate_moltypes, enc=["nucl"], ext=compare_exts)
 
 prot_compare_plots = expand(os.path.join(plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.np.matrix.pdf"), subset=SUBSETS, k=prot_ksizes, mol=prot_moltypes, enc=prot_encodings, ext=compare_exts)
 nucl_compare_plots = expand(os.path.join(plots_dir, "{subset}_k{k}_{mol}_{enc}_compare.np.matrix.pdf"), subset=SUBSETS, k=nucl_ksizes, mol=nucl_moltypes, enc=nucl_encodings, ext=compare_exts)
-translate_compare_plots = expand(os.path.join(plots_dir,"{subset}_k{k}_{mol}_{enc}_compare.np.matrix.pdf"), subset=SUBSETS, k=prot_ksizes, mol=translate_moltypes, enc=prot_encodings, ext=compare_exts)
+translate_compare_plots = expand(os.path.join(plots_dir,"{subset}_k{k}_{mol}_{enc}_compare.np.matrix.pdf"), subset=SUBSETS, k=translate_ksizes_compare, mol=translate_moltypes, enc=prot_encodings, ext=compare_exts)
+translate_nucl_compare_plots = expand(os.path.join(compare_dir,"{subset}_k{k}_{mol}_{enc}_compare.np.matrix.pdf"), subset=SUBSETS, k=31, mol=translate_moltypes, enc=["nucl"], ext=compare_exts)
 
 #testing
 #genomic_compare_plots = expand(os.path.join(plots_dir,"{subset}_k{k}_{mol}_{enc}_compare.np.matrix.pdf"), subset=['denticola'], k=["21"], mol=["genomic"], enc=["nucl"], ext=compare_exts)
@@ -47,8 +50,9 @@ sigbase = os.path.join(outbase, "gingivalis", "cds", "sigs","{sample}.sig")
 sigfiles = expand(sigbase, sample=glob_wildcards(path).sample)
 
 rule all:
-    input: translate_compare_files #prot_compare_files , nucl_compare_files #, translate_compare_files
-   # input: prot_compare_plots, nucl_compare_plots, translate_compare_plots
+    #input: prot_compare_files #translate_nucl_compare_files, prot_compare_files , nucl_compare_files, translate_compare_files
+    #input: translate_compare_files, translate_nucl_compare_files #prot_compare_files , nucl_compare_files, translate_compare_files
+    input: prot_compare_plots, nucl_compare_plots, translate_compare_plots #, translate_nucl_compare_plots
     #input: sigfiles
 
 # compute nucleotide sigs
@@ -61,7 +65,7 @@ rule compute_genomic:
         compute_moltypes=["dna"],
         track_abundance=True,
     log: os.path.join(outbase, "{subset}", "genomic", "sigs", "{sample}_sig.log")
-    #conda: "sourmash-2.3.0.yml"
+    conda: "sourmash-2.3.1.yml"
     script: "sourmash-compute.wrapper.py"
 
 # compute protein sigs
@@ -75,7 +79,7 @@ rule compute_protein:
         input_is_protein=True,
         track_abundance=True,
     log: os.path.join(outbase, "{subset}", "protein", "sigs", "{sample}_sig.log")
-    #conda: "sourmash-2.3.0.yml"
+    conda: "sourmash-2.3.1.yml"
     script: "sourmash-compute.wrapper.py"
 
 # compute nucl and protein sigs from 6-frame translation of rna, cds data
@@ -84,11 +88,11 @@ rule compute_rna:
     output: os.path.join(outbase, "{subset}", "rna", "sigs", "{sample}.sig" )
     params:
         scaled=scaled_val,
-        k=translate_ksizes,
+        k=translate_ksizes_compute,
         compute_moltypes=["dna", "protein", "dayhoff", "hp"],
         track_abundance=True,
     log: os.path.join(outbase, "{subset}", "rna", "sigs", "{sample}_sig.log")
-    #conda: "sourmash-2.3.0.yml"
+    conda: "sourmash-2.3.1.yml"
     script: "sourmash-compute.wrapper.py"
 
 rule compute_cds:
@@ -96,11 +100,11 @@ rule compute_cds:
     output: os.path.join(outbase, "{subset}", "cds", "sigs", "{sample}.sig" )
     params:
         scaled=2000,
-        k=translate_ksizes,
+        k=translate_ksizes_compute,
         compute_moltypes=["dna", "protein", "dayhoff", "hp"],
         track_abundance=True,
     log: os.path.join(outbase, "{subset}", "cds", "sigs", "{sample}_sig.log")
-    #conda: "sourmash-2.3.0.yml"
+    conda: "sourmash-2.3.1.yml"
     script: "sourmash-compute.wrapper.py"
 
 def aggregate_sigs(w):
@@ -123,7 +127,7 @@ rule sourmash_compare:
         include_encodings = lambda w: f"{w.encoding}",
         exclude_encodings = ["nucl", "protein", "dayhoff", "hp"], # this will excude everything except for included encoding
         k = lambda w: f"{w.k}",
-    #conda: "sourmash-2.3.0.yml"
+    conda: "sourmash-2.3.1.yml"
     script: "sourmash-compare.wrapper.py"
 
 # sourmash plot each compare matrix numpy output
@@ -132,7 +136,7 @@ rule sourmash_plot:
     output: os.path.join(plots_dir, "{subset}_k{k}_{molecule}_{encoding}_compare.np.matrix.pdf")
     params:
         plot_dir= os.path.join(plots_dir),
-    conda: "sourmash-2.3.0.yml"
+    conda: "sourmash-2.3.1.yml"
     shell:
         """
         sourmash plot --output-dir {params.plot_dir} --labels --pdf {input}

@@ -3,7 +3,7 @@ Author: N. Tessa Pierce, UC Davis Lab for Data Intensive Biology
 Run: snakemake -s eggnog.rule --use-conda #--cores 26 --cluster "sbatch -t 10:00:00 -N 11 -n 26 -p bmm --mem=60gb" --jobs 5 -k --rerun-incomplete 
 """
 
-rule an_nog_tate:
+rule anNOGtate:
     input: "p53_maNOG.emapper.annotations", "p53_maNOG.emapper.seed_orthologs"
 
 rule get_eggnog_dbs:
