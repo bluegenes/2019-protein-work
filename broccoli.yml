@@ -1,0 +1,14 @@
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - ete3
+  - diamond
+  - fasttree
+  - pip
+  - git
+# not pip installable
+#  - pip:
+#    - git+https://github.com/rderelle/Broccoli
