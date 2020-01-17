@@ -3,8 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python>=3
-  - pandas
-  - ete3
+  - python>=3.6
+  - etetoolkit::ete3
   - diamond
   - fasttree
