@@ -8,3 +8,6 @@ dependencies:
   - ete3
   - diamond
   - fasttree
+  - pip:
+    - ete3
+    - pandas

@@ -34,6 +34,9 @@ samples_csv = config["samples"]
 samplesDF = read_samples(samples_csv)
 SAMPLES = samplesDF["sample"].tolist() 
 pep_dir = config["pep_dir"]
+out_dir = config.get("out_dir", "haptophyta_broccoli")
+pep_fasta  = os.path.join(out_dir, "pep_fasta")
+
 #input files = pep_dir/{sample}.pep
 #MMETSP0224.trinity_out_2.2.0.Trinity.fasta.transdecoder.pep
 # pass pep_dir to broccoli
@@ -42,22 +45,45 @@ pep_dir = config["pep_dir"]
 #MAYBE A PROBLEM: peptide names (before first space) need to be unique. Is this just within the file, or across files? If across, add MMETSP sample number to each?
 #import pdb;pdb.set_trace()
 
-#rule all:
-#    "dir_step3/orthologous_groups.txt"
+rule all:
+    input: os.path.join(out_dir, "dir_step3/orthologous_groups.txt")
+
+
+# if the peptide files don't end in ".fasta", we need to add this. Also, since the input to broccoli is a directory,
+# we need to copy *just* the relevant pep files to a new location
+rule prep_pepdir:
+    output: expand(os.path.join(pep_fasta, "{sample}.trinity_out_2.2.0.Trinity.fasta.transdecoder.pep.fasta"), sample=SAMPLES)
+    params:
+        dest=pep_fasta
+    shell:
+        """
+        python copy_samplefiles.py haptophyta.txt --source {input} --destination {params.dest}
+        """
 
 rule run_broccoli: 
-    input: expand(os.path.join(pep_dir, "{sample}.trinity_out_2.2.0.Trinity.fasta.transdecoder.pep"), sample=SAMPLES)
+    input: expand(os.path.join(pep_fasta, "{sample}.trinity_out_2.2.0.Trinity.fasta.transdecoder.pep.fasta"), sample=SAMPLES)
     output: 
-        "dir_step3/orthologous_groups.txt",
-        "dir_step3/chimeric_proteins.txt",
-        "dir_step4/orthologous_pairs.txt"
-    log: "logs/broccoli.log" 
+        step3="dir_step3/orthologous_groups.txt",
+        step4="dir_step4/orthologous_pairs.txt",
+        #"dir_step3/chimeric_proteins.txt",
+    log: os.path.join(out_dir, "logs/broccoli.log") 
     params:
-        pep_dir=config["pep_dir"] 
+        pep_dir=pep_fasta
     conda: "broccoli.yml"
+    threads: 10
     shell: 
         """
-        python Broccoli/broccoli.py -dir {params.pep_dir}
+        python Broccoli/broccoli.py -dir {params.pep_dir} -threads {threads} 2> {log}
         """
         #python Broccoli/broccoli.py -dir Broccoli/example_dataset
+
+rule move_broccoli_results:
+    input: rules.run_broccoli.output 
+    output: os.path.join(out_dir, "dir_step3/orthologous_groups.txt")
+    params:
+        dest= out_dir
+    shell:
+        """
+        mv dir_step1 dir_step2 dir_step3 dir_step4 {params.dest}
+        """
 
