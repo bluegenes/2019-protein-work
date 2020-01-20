@@ -94,4 +94,3 @@ rule move_broccoli_results:
         """
         mv dir_step1 dir_step2 dir_step3 dir_step4 {params.dest}
         """
-
