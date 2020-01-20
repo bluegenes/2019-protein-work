@@ -59,13 +59,13 @@ rule all:
 
 rule ncbi_genome_download:
     output: 
-         genomic = os.path.join(outbase, "{csv_name}", genomic_dir, "{sample}" + genomic_ext),
-         protein = os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext),
-         rna = os.path.join(outbase, "{csv_name}", rna_dir, "{sample}" + rna_ext),
-         cds = os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + cds_ext),
+        genomic = os.path.join(outbase, "{csv_name}", genomic_dir, "{sample}" + genomic_ext),
+        protein = os.path.join(outbase, "{csv_name}", protein_dir, "{sample}" + protein_ext),
+        rna = os.path.join(outbase, "{csv_name}", rna_dir, "{sample}" + rna_ext),
+        cds = os.path.join(outbase, "{csv_name}", cds_dir, "{sample}" + cds_ext),
+        failed = os.path.join(outbase, "ncbi_failed_downloads.txt"),
     params: 
         accession= lambda w: linkdb[w.csv_name][w.sample],
-        failed = os.path.join(outbase, "ncbi_failed_downloads.txt"),
         ghost_files=True # make ghost files for failed downloads so snakemake is happy
     conda: "dl-test-datasets.yml"
     script: "ncbi-genome-download.wrapper.py"
