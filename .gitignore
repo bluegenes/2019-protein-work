@@ -1,1 +1,5 @@
 .snakemake
+*/
+.snakemake.*
+slurm*out
+slurm*err

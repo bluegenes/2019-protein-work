@@ -1,8 +1,6 @@
 channels:
   - bioconda
   - conda-forge
-  - anaconda
   - defaults
 dependencies:
-  - eggnog-mapper>=2.0.1
-  - pigz
+  - sourmash==3.1.0
