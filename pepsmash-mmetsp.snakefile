@@ -15,6 +15,7 @@ if not samples_csv:
 
 samplesDF = read_samples(samples_csv)
 SAMPLES = samplesDF["sample"].tolist()
+SAMPLES.remove("MMETSP0754") # pep file is empty!!!
 pep_dir = config["pep_dir"]
 scaled_val=config.get("scaled", "2000")
 ksizes=config.get("ksizes", ["7", "11", "17"])
@@ -57,6 +58,7 @@ rule compute_protein:
         input_is_protein=True,
         track_abundance=True,
     log: os.path.join(logs_dir, "{sample}_compute.log")
+    benchmark: os.path.join(logs_dir, "{sample}_compute.benchmark")
     conda: "sourmash-3.1.0.yml"
     script: "sourmash-compute.wrapper.py"
 
@@ -70,6 +72,8 @@ rule sourmash_compare:
         include_encodings = lambda w: f"{w.encoding}",
         exclude_encodings = ["nucl", "protein", "dayhoff", "hp"], # this will exclude everything except for included encoding
         k = lambda w: f"{w.k}",
+    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare.log")
+    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare.benchmark")
     conda: "sourmash-3.1.0.yml"
     script: "sourmash-compare.wrapper.py"
 
@@ -79,6 +83,8 @@ rule sourmash_plot:
     output: os.path.join(plots_dir, "mmetsp_k{k}_{encoding}_compare.np.matrix.pdf")
     params:
         plot_dir=plots_dir 
+    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_plot.log")
+    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_plot.benchmark")
     conda: "sourmash-3.1.0.yml"
     shell:
         """
