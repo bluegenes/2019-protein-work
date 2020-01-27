@@ -95,8 +95,8 @@ rule run_eggnog_mapper_dmnd:
         mode="diamond",
         data_dir=directory("eggnog_data"),
         out_dir=out_dir
-    log: os.path.join(out_dir, "logs", "{sample}_emapper.log")
-    benchmark: os.path.join(out_dir, "logs", "{sample}_emapper.benchmark")
+    log: os.path.join(out_dir, "logs", "{sample}_emapper_dmnd.log")
+    benchmark: os.path.join(out_dir, "logs", "{sample}_emapper_dmnd.benchmark")
     threads: 20
     shadow: "shallow" ## this means tmpdir will be on local scratch (using --shadow-prefix) --> faster? 
     conda: "eggnog.yml"
@@ -118,8 +118,8 @@ rule run_eggnog_mapper_annotate:
         mode="diamond",
         #data_dir=directory("eggnog_data")
         data_dir=database_dir
-    log: os.path.join(out_dir, "logs", "{sample}_emapper.log")
-    benchmark: os.path.join(out_dir, "logs", "{sample}_emapper.benchmark")
+    log: os.path.join(out_dir, "logs", "{sample}_emapper_annot.log")
+    benchmark: os.path.join(out_dir, "logs", "{sample}_emapper_annot.benchmark")
     threads: 1
     conda: "eggnog.yml"
     shadow: "shallow" ## here, it helps to have local eggnog db, write locally, then copy out to final location
