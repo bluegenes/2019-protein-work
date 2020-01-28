@@ -39,15 +39,20 @@ if not samples_csv:
     sys.stderr.write(f"\n\tError: Please provide samples file via yml config\n\n")
     sys.exit(-1)
 
-samplesDF = read_samples(samples_csv)
-SAMPLES = samplesDF["sample"].tolist()
+#samplesDF = read_samples(samples_csv)
+#SAMPLES = samplesDF["sample"].tolist()
+
+# 10 subset
+samplelist = "/home/ntpierce/2019-burgers-shrooms/mmetsp_info/ten_haptophytes.txt"
+SAMPLES = [x.strip().split('\t')[0] for x in open(samplelist, "r")]
+
 pep_dir = config["pep_dir"]
 out_dir = config.get("out_dir", "mmetsp_eggnog")
 database_dir = config.get("db_dir", "eggnog_data")
 
 rule anNOGtate:
     input: 
-         #expand(os.path.join(out_dir, "{sample}.emapper.annotations"), sample=SAMPLES), 
+         expand(os.path.join(out_dir, "{sample}.emapper.annotations"), sample=SAMPLES),
          expand(os.path.join(out_dir, "{sample}.emapper.seed_orthologs"), sample=SAMPLES)
 
 rule get_eggnog_dbs:
@@ -117,7 +122,8 @@ rule run_eggnog_mapper_annotate:
     params:
         mode="diamond",
         #data_dir=directory("eggnog_data")
-        data_dir=database_dir
+        data_dir=database_dir,
+        out_dir=out_dir
     log: os.path.join(out_dir, "logs", "{sample}_emapper_annot.log")
     benchmark: os.path.join(out_dir, "logs", "{sample}_emapper_annot.benchmark")
     threads: 1
@@ -125,7 +131,7 @@ rule run_eggnog_mapper_annotate:
     shadow: "shallow" ## here, it helps to have local eggnog db, write locally, then copy out to final location
     shell:
         """
-        emapper.py --annotate_hits_table {input.seed_orthologs} --no_file_comments -o {output} --data_dir {params.data_dir} --cpu {threads} > {log} 2>&1
+        emapper.py --annotate_hits_table {input.seed_orthologs} --no_file_comments -o {params.out_dir}/{wildcards.sample} --data_dir {params.data_dir} --cpu {threads} > {log} 2>&1
         """
 
 ## if running on single node, can run all at once

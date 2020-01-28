@@ -1,0 +1,49 @@
+# cluster_config.yml - cluster configuration
+__default__:
+    partition: bmm
+    time: 02:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1 
+    mem: 1GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "slurm_logs/slurm-{rule}.{wildcards}.stderr"
+    stdout: "slurm_logs/slurm-{rule}.{wildcards}.stdout"
+    jobname: "default: {rule} {wildcards}"
+broccoli:
+    partition: bmm
+    time: 5-00:00:00 # time limit for each job
+    nodes: 1
+    ntasks: 50 #Request n cores be allocated per node. 
+    cpus_per_task: 50 
+    mem: 250GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "slurm_logs/slurm-{rule}.{wildcards}.stderr"
+    stdout: "slurm_logs/slurm-{rule}.{wildcards}.stdout"
+    jobname: "broccoli: {rule} {wildcards}"
+run_eggnog_mapper_dmnd:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 20
+    mem: 10GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "/home/ntpierce/slurm_logs/nog-dmnd-%j.stderr"
+    stdout: "/home/ntpierce/slurm_logs/nog-dmnd-%j.stdout"
+run_eggnog_mapper_annotate:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1
+    mem: 10GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "slurm_logs/slurm-nog-annot=%j.stderr"
+    stdout: "slurm_logs/slurm-nog-annot-%j.stdout"
+run_kofamscan:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 20
+    mem: 20GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "slurm_logs/slurm-kofamscan=%j.stderr"
+    stdout: "slurm_logs/slurm-kofamscan-%j.stdout"
