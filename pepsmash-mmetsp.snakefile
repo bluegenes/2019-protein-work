@@ -32,12 +32,11 @@ compare_exts= [".np", ".csv"]
 
 sigfiles = expand(os.path.join(compute_dir, "{sample}.sig"), sample= SAMPLES)
 comparefiles = expand(os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare{end}"), k=ksizes, encoding=encodings, end=compare_exts)
-plotfiles = expand(os.path.join(plots_dir, "mmetsp_k{k}_{encoding}_compare.np.matrix.pdf"), k=ksizes, encoding=encodings, end=compare_exts)
+plotfiles = expand(os.path.join(plots_dir, "mmetsp_k{k}_{encoding}_compare_{type}.np.matrix.pdf"), k=ksizes, encoding=encodings, type=["cosine", "jaccard"], end=compare_exts)
 
 rule all:
     input: plotfiles
-#    input: sigfiles, comparefiles, plotfiles
-
+    #input: sigfiles, comparefiles, plotfiles
 
 def get_pep(w):
 #most: MMETSP0224.trinity_out_2.2.0.Trinity.fasta.transdecoder.pep
@@ -63,28 +62,56 @@ rule compute_protein:
     script: "sourmash-compute.wrapper.py"
 
 # build all compare matrices: np and csv output
-rule sourmash_compare:
+rule sourmash_compare_cosine:
     input: sigs=expand(os.path.join(compute_dir, "{sample}.sig"), sample= SAMPLES)
     output: 
-        np=os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare.np"),
-        csv=os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare.csv")
+        np=os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare_cosine.np"),
+        csv=os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare_cosine.csv")
     params:
         include_encodings = lambda w: f"{w.encoding}",
         exclude_encodings = ["nucl", "protein", "dayhoff", "hp"], # this will exclude everything except for included encoding
         k = lambda w: f"{w.k}",
-    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare.log")
-    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare.benchmark")
-    conda: "sourmash-3.1.0.yml"
+    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare_cosine.log")
+    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare_cosine.benchmark")
+    conda: "sourmash-3.2.2.yml"
+    script: "sourmash-compare.wrapper.py"
+
+rule sourmash_compare_jaccard:
+    input: sigs=expand(os.path.join(compute_dir, "{sample}.sig"), sample= SAMPLES)
+    output: 
+        np=os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare_jaccard.np"),
+        csv=os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare_jaccard.csv")
+    params:
+        ignore_abundance="True",
+        include_encodings = lambda w: w.encoding,
+        exclude_encodings = ["nucl", "protein", "dayhoff", "hp"], # this will exclude everything except for included encoding
+        k = lambda w: w.k,
+    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare_jaccard.log")
+    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_compare_jaccard.benchmark")
+    conda: "sourmash-3.2.2.yml"
     script: "sourmash-compare.wrapper.py"
 
 # sourmash plot each compare matrix numpy output
-rule sourmash_plot:
-    input: os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare.np")
-    output: os.path.join(plots_dir, "mmetsp_k{k}_{encoding}_compare.np.matrix.pdf")
+rule sourmash_plot_cosine:
+    input: os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare_cosine.np")
+    output: os.path.join(plots_dir, "mmetsp_k{k}_{encoding}_compare_cosine.np.matrix.pdf")
     params:
         plot_dir=plots_dir 
-    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_plot.log")
-    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_plot.benchmark")
+    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_cosine_plot.log")
+    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_cosine_plot.benchmark")
+    conda: "sourmash-3.2.2.yml"
+    shell:
+        """
+        sourmash plot --output-dir {params.plot_dir} --labels --pdf {input}
+        """
+
+rule sourmash_plot_jaccard:
+    input: os.path.join(compare_dir, "mmetsp_k{k}_{encoding}_compare_jaccard.np")
+    output: os.path.join(plots_dir, "mmetsp_k{k}_{encoding}_compare_jaccard.np.matrix.pdf")
+    params:
+        plot_dir=plots_dir 
+    log: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_jaccard_plot.log")
+    benchmark: os.path.join(logs_dir, "mmetsp_k{k}_{encoding}_jaccard_plot.benchmark")
     conda: "sourmash-3.1.0.yml"
     shell:
         """

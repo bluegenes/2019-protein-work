@@ -7,7 +7,6 @@ __license__ = "MIT"
 
 from snakemake.shell import shell
 
-
 # handle inputs
 sigs = snakemake.input.get("sigs")
 traverse_dir = snakemake.input.get("traverse_sig_dir")
@@ -30,7 +29,7 @@ k = snakemake.params.get("k", "31")
 ignore_abund = snakemake.params.get("ignore_abundance", False)
 abund_cmd = ""
 if ignore_abund:
-    abund_cmd = " --ignore_abundance "
+    abund_cmd = " --ignore-abundance "
 
 # encodings
 include = snakemake.params.get("include_encodings")

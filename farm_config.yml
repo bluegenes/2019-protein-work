@@ -6,9 +6,9 @@ __default__:
     cpus_per_task: 1 
     mem: 1GB
     chdir: /home/ntpierce/2019-protein-work
-    stderr: "slurm_logs/slurm-{rule}.{wildcards}.stderr"
-    stdout: "slurm_logs/slurm-{rule}.{wildcards}.stdout"
-    jobname: "default: {rule} {wildcards}"
+    stderr: "logs/slurm-%x.stderr"
+    stdout: "logs/slurm-%x.stdout"
+    jobname: "{rule}.w{wildcards}"
 broccoli:
     partition: bmm
     time: 5-00:00:00 # time limit for each job
@@ -19,7 +19,7 @@ broccoli:
     chdir: /home/ntpierce/2019-protein-work
     stderr: "slurm_logs/slurm-{rule}.{wildcards}.stderr"
     stdout: "slurm_logs/slurm-{rule}.{wildcards}.stdout"
-    jobname: "broccoli: {rule} {wildcards}"
+    jobname: "{rule}.w{wildcards}"
 run_eggnog_mapper_dmnd:
     partition: bmm
     time: 04:00:00 # time limit for each job
@@ -45,5 +45,55 @@ run_kofamscan:
     cpus_per_task: 20
     mem: 20GB
     chdir: /home/ntpierce/2019-protein-work
-    stderr: "slurm_logs/slurm-kofamscan=%j.stderr"
+    stderr: "slurm_logs/slurm-kofamscan-%j.stderr"
     stdout: "slurm_logs/slurm-kofamscan-%j.stdout"
+compute_protein:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1
+    mem: 1GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stderr"
+    stdout: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stdout"
+    jobname: "{rule}.w{wildcards}"
+sourmash_compare_cosine:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1
+    mem: 1GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stderr"
+    stdout: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stdout"
+    jobname: "{rule}.w{wildcards}"
+sourmash_compare_jaccard:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1
+    mem: 1GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stderr"
+    stdout: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stdout"
+    jobname: "{rule}.w{wildcards}"
+sourmash_plot_cosine:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1
+    mem: 1GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stderr"
+    stdout: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stdout"
+    jobname: "{rule}.w{wildcards}"
+sourmash_plot_jaccard:
+    partition: bmm
+    time: 04:00:00 # time limit for each job
+    nodes: 1
+    cpus_per_task: 1
+    mem: 1GB
+    chdir: /home/ntpierce/2019-protein-work
+    stderr: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stderr"
+    stdout: "mmetsp_pepsmash/logs/sourmash/slurm-%j.stdout"
+    jobname: "{rule}.w{wildcards}"
