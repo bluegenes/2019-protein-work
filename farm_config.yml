@@ -47,7 +47,8 @@ run_kofamscan:
     chdir: /home/ntpierce/2019-protein-work
     stderr: "slurm_logs/slurm-kofamscan-%j.stderr"
     stdout: "slurm_logs/slurm-kofamscan-%j.stdout"
-compute_protein:
+#compute_protein:
+johnson_pep_sourmash_compute:
     partition: bmm
     time: 04:00:00 # time limit for each job
     nodes: 1

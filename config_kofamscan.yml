@@ -1,0 +1,6 @@
+
+
+#samples: "/home/ntpierce/2019-burgers-shrooms/mmetsp_info/all_mmetsp_elvers.csv"
+pep_dir: "/home/ntpierce/2019-burgers-shrooms/mmetsp_info/mmetsp_pep"
+samplelist: "mmetsp.txt"
+out_dir: "mmetsp_kofamscan"

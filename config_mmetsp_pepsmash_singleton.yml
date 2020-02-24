@@ -6,25 +6,20 @@ samplelist: "mmetsp.txt"
 out_dir: "mmetsp_pepsmash"
 wrappers_dir: /home/ntpierce/2020-pep/wrappers
 scaled:
-#  - 1
-#  - 50
-#  - 200
-#  - 500 
-#  - 1000
-  - 2000
+  - 1
 ksizes:
 #  - 7
 #  - 11
 #  - 17
 #  - 21
-  - 25
-  - 27
+#  - 25
+#  - 27
   - 31
 #  - 33
 #  - 35
 #  - 39
 #  - 41
 encodings:
-  - protein
+#  - protein
   - dayhoff
-  - hp
+#  - hp

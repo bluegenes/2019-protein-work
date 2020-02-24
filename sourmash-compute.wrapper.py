@@ -14,6 +14,7 @@ k = snakemake.params.get("k", "31")
 compute_moltypes = snakemake.params.get("compute_moltypes", "dna")
 input_is_protein = snakemake.params.get("input_is_protein", False)
 track_abundance = snakemake.params.get("track_abundance", True)
+singleton = snakemake.params.get("singleton", False)
 
 k = [k] if (isinstance(k, str) or isinstance(k, int)) else k
 
@@ -45,6 +46,8 @@ if input_is_protein:
 abund_cmd = ""
 if track_abundance:
     abund_cmd = " --track-abundance "
+if singleton:
+    extra += " --singleton "
 
 
 if nucl_only_ksizes:
